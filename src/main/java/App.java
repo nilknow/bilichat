@@ -8,6 +8,8 @@ import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -25,6 +27,8 @@ public class App {
     private JTextField textField_inputPanel = new JTextField();
     private JButton buttonSend_inputPanel = new JButton("send");
 
+    private boolean noMessage = true;
+
     private static final Color TEXT_AREA_BACKGROUND_COLOR_DEFAULT = Color.BLACK;
     private static final Color TEXT_AREA_FOREGROUND_COLOR_DEFAULT = Color.WHITE;
 
@@ -41,79 +45,80 @@ public class App {
         return panel;
     }
 
-    AtomicBoolean hasInput = new AtomicBoolean(false);
+
     private JPanel inputPanel() {
         JPanel panel = new JPanel();
 
         String hint = "input your message here";
         textField_inputPanel.setHint(hint);
-        DocumentListener documentInsertListener = new DocumentListener() {
+        textField_inputPanel.setForeground(Color.GRAY);
+        textField_inputPanel.setTransferHandler(null);//disable copy,paste
+        AtomicBoolean hasInput = new AtomicBoolean(false);
+        textField_inputPanel.addKeyListener(new KeyListener() {
             @Override
-            public void insertUpdate(DocumentEvent e) {
-//                try {
-//                    log.debug(e.getDocument().getText(0, e.getDocument().getLength()));
-//                } catch (BadLocationException badLocationException) {
-//                    log.error(badLocationException.toString());
-//                }
-                hasInput.set(true);
-                buttonSend_inputPanel.setEnabled(true);
-                log.debug("document inserted");
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
+            public void keyTyped(KeyEvent e) {
 
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {
+            public void keyPressed(KeyEvent e) {
 
             }
-        };
-        textField_inputPanel.getDocument().addDocumentListener(documentInsertListener);
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                log.debug("keyrelease");
+                if (textField_inputPanel.getText() == null || "".equals(textField_inputPanel.getText())) {
+                    hasInput.set(false);
+                    textField_inputPanel.setForeground(Color.GRAY);
+                    buttonSend_inputPanel.setEnabled(false);
+                }else{
+                    hasInput.set(true);
+                    textField_inputPanel.setForeground(Color.BLACK);
+                    buttonSend_inputPanel.setEnabled(true);
+                }
+            }
+        });
         textField_inputPanel.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                log.debug("focusgained");
-                //todo use another method to test if use hint
+                log.debug("focused");
                 if (!hasInput.get()) {
                     textField_inputPanel.setText("");
-                    log.debug("clear hint");
+                    buttonSend_inputPanel.setEnabled(false);
                 }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                log.debug("focuslost");
+                log.debug("lost");
                 if (!hasInput.get()) {
-                    try {
-                        //ugly implement
-                        textField_inputPanel.getDocument().removeDocumentListener(documentInsertListener);
-                        textField_inputPanel.getDocument().insertString(0, hint, null);
-                        textField_inputPanel.getDocument().addDocumentListener(documentInsertListener);
-                        log.debug("set hint to text");
-                    } catch (BadLocationException badLocationException) {
-                        log.error(badLocationException.toString());
-                    }
+                    textField_inputPanel.setText(hint);
+                    buttonSend_inputPanel.setEnabled(false);
                 }
             }
         });
 
         buttonSend_inputPanel = new JButton("send");
         buttonSend_inputPanel.addActionListener(actionEvent -> {
-            log.debug("clicked");
             if (!hasInput.get()) {
                 return;
             }
+            if (noMessage) {
+                noMessage = false;
+                textArea_messagePanel.setText("");
+            }
+
             String input = textField_inputPanel.getText();
             if (input == null || input.isEmpty() || input.trim().isEmpty()) {
                 return;
             }
             textArea_messagePanel.append(input.trim() + "\n");
-            log.debug("send button clicked");
 
             hasInput.set(false);
-            textField_inputPanel.setText("");
+            //textField will lose focus first, so we need to set it manually
+            textField_inputPanel.setText(hint);
+            textField_inputPanel.setForeground(Color.GRAY);
         });
         buttonSend_inputPanel.setEnabled(false);
 
@@ -125,6 +130,7 @@ public class App {
 
     private static void showFrame() {
         f.setResizable(false);
+        f.setAlwaysOnTop( true );
         f.setSize(windowWidth, windowHeight);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         f.setLocation(screenSize.width - windowWidth - 200, (screenSize.height - windowHeight) / 2);

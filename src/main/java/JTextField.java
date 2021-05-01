@@ -21,4 +21,11 @@ public class JTextField extends javax.swing.JTextField {
         this.hint=hint;
         setText(hint);
     }
+
+    @Override
+    public void setText(String t) {
+        super.setText(t);
+        //get related components
+        //change related components' status
+    }
 }
