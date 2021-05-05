@@ -3,9 +3,13 @@ import frontend.JFrame;
 import frontend.JPanel;
 import frontend.JTextField;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +21,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class App {
@@ -28,9 +34,9 @@ public class App {
     private static final int windowHeight = 600;
 
     private static final String loginUrl = "https://passport.bilibili.com/login";
+    private static final Set<Cookie> cookieSet = new HashSet<>();
 
     private JTextArea textArea_messagePanel = new JTextArea();
-
     private JTextField textField_inputPanel = new JTextField();
     private JButton buttonSend_inputPanel = new JButton("send");
 
@@ -43,8 +49,7 @@ public class App {
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
             loginFrame();
-//            mainFrame();
-//            setEventListener();
+            mainFrame();
         });
     }
 
@@ -54,7 +59,12 @@ public class App {
         WebElement element = browser.findElement(By.id("login-username"));
         element.sendKeys("maxwangein@gmail.com");
         browser.findElement(By.id("login-passwd")).click();
-        //todo wait for login
+
+        //wait until logged in
+        WebDriverWait wait = new WebDriverWait(browser, 24 * 60 * 60);
+        wait.until(ExpectedConditions.urlToBe("https://passport.bilibili.com/account/security#/home"));
+
+        cookieSet.addAll(browser.manage().getCookies());
         browser.close();
     }
 
