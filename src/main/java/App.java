@@ -2,7 +2,9 @@ import frontend.JButton;
 import frontend.JFrame;
 import frontend.JPanel;
 import frontend.JTextField;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,9 @@ public class App {
         SwingUtilities.invokeAndWait(() -> {
             WebDriver browser = new ChromeDriver();
             browser.get(loginUrl);
+            WebElement element = browser.findElement(By.id("login-username"));
+            element.sendKeys("maxwangein@gmail.com");
+            browser.findElement(By.id("login-passwd")).click();
 //            loginFrame();
 //            mainFrame();
 //            setEventListener();
