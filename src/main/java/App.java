@@ -42,35 +42,20 @@ public class App {
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
-            WebDriver browser = new ChromeDriver();
-            browser.get(loginUrl);
-            WebElement element = browser.findElement(By.id("login-username"));
-            element.sendKeys("maxwangein@gmail.com");
-            browser.findElement(By.id("login-passwd")).click();
-//            loginFrame();
+            loginFrame();
 //            mainFrame();
 //            setEventListener();
         });
     }
 
     private static void loginFrame(){
-
-        JFrame f = new JFrame("java browser");
-
-        JEditorPane jep = new JEditorPane();
-        jep.setEditable(true);
-        try {
-            jep.setPage(loginUrl);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        JScrollPane jsp = new JScrollPane(jep);
-
-        f.setContentPane(jsp);
-        f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        f.setSize(1024, 860);
-        f.setVisible(true);
+        WebDriver browser = new ChromeDriver();
+        browser.get(loginUrl);
+        WebElement element = browser.findElement(By.id("login-username"));
+        element.sendKeys("maxwangein@gmail.com");
+        browser.findElement(By.id("login-passwd")).click();
+        //todo wait for login
+        browser.close();
     }
 
     private static void mainFrame() {
