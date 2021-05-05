@@ -1,4 +1,9 @@
+import frontend.JButton;
+import frontend.JFrame;
+import frontend.JPanel;
 import frontend.JTextField;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,30 +13,79 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final App app = new App();
-    private static final frontend.JFrame f = new frontend.JFrame();
+    private static final JFrame f = new JFrame();
 
     private static final int windowWidth = 300;
     private static final int windowHeight = 600;
 
+    private static final String loginUrl = "https://passport.bilibili.com/login";
 
     private JTextArea textArea_messagePanel = new JTextArea();
 
-    private frontend.JTextField textField_inputPanel = new JTextField();
-    private frontend.JButton buttonSend_inputPanel = new frontend.JButton("send");
+    private JTextField textField_inputPanel = new JTextField();
+    private JButton buttonSend_inputPanel = new JButton("send");
 
     private boolean noMessage = true;
 
     private static final Color TEXT_AREA_BACKGROUND_COLOR_DEFAULT = Color.BLACK;
     private static final Color TEXT_AREA_FOREGROUND_COLOR_DEFAULT = Color.WHITE;
 
-    private frontend.JPanel messagePanel() {
-        frontend.JPanel panel = new frontend.JPanel(f.getWidth(), f.getHeight() - 100);
+
+    public static void main(String[] args) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            WebDriver browser = new ChromeDriver();
+            browser.get(loginUrl);
+//            loginFrame();
+//            mainFrame();
+//            setEventListener();
+        });
+    }
+
+    private static void loginFrame(){
+
+        JFrame f = new JFrame("java browser");
+
+        JEditorPane jep = new JEditorPane();
+        jep.setEditable(true);
+        try {
+            jep.setPage(loginUrl);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        JScrollPane jsp = new JScrollPane(jep);
+
+        f.setContentPane(jsp);
+        f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        f.setSize(1024, 860);
+        f.setVisible(true);
+    }
+
+    private static void mainFrame() {
+        f.setResizable(false);
+        f.setAlwaysOnTop( true );
+        f.setSize(windowWidth, windowHeight);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        f.setLocation(screenSize.width - windowWidth - 200, (screenSize.height - windowHeight) / 2);
+
+        JPanel messagePanel = app.messagePanel();
+        JPanel inputPanel = app.inputPanel();
+        f.add(messagePanel);
+        f.add(inputPanel);
+        f.setLayout(new BoxLayout(f.getContentPane(), BoxLayout.Y_AXIS));
+        f.setUndecorated(true);
+        f.setVisible(true);
+    }
+
+    private JPanel messagePanel() {
+        JPanel panel = new JPanel(f.getWidth(), f.getHeight() - 100);
 
         textArea_messagePanel.setEditable(false);
         textArea_messagePanel.setText("no message now...\n");
@@ -44,8 +98,8 @@ public class App {
     }
 
 
-    private frontend.JPanel inputPanel() {
-        frontend.JPanel panel = new frontend.JPanel();
+    private JPanel inputPanel() {
+        JPanel panel = new JPanel();
 
         String hint = "input your message here";
         textField_inputPanel.setHint(hint);
@@ -97,7 +151,7 @@ public class App {
             }
         });
 
-        buttonSend_inputPanel = new frontend.JButton("send");
+        buttonSend_inputPanel = new JButton("send");
         buttonSend_inputPanel.addActionListener(actionEvent -> {
             if (!hasInput.get()) {
                 return;
@@ -124,28 +178,5 @@ public class App {
         panel.add(buttonSend_inputPanel);
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         return panel;
-    }
-
-    private static void showFrame() {
-        f.setResizable(false);
-        f.setAlwaysOnTop( true );
-        f.setSize(windowWidth, windowHeight);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        f.setLocation(screenSize.width - windowWidth - 200, (screenSize.height - windowHeight) / 2);
-
-        frontend.JPanel messagePanel = app.messagePanel();
-        frontend.JPanel inputPanel = app.inputPanel();
-        f.add(messagePanel);
-        f.add(inputPanel);
-        f.setLayout(new BoxLayout(f.getContentPane(), BoxLayout.Y_AXIS));
-        f.setUndecorated(true);
-        f.setVisible(true);
-    }
-
-    public static void main(String[] args) throws InterruptedException, InvocationTargetException {
-        SwingUtilities.invokeAndWait(() -> {
-            showFrame();
-//            setEventListener();
-        });
     }
 }
