@@ -1,13 +1,16 @@
+import backend.BiliApi;
+import backend.tool.HttpClient;
 import frontend.JButton;
 import frontend.JFrame;
 import frontend.JPanel;
 import frontend.JTextField;
+import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -33,9 +36,6 @@ public class App {
     private static final int windowWidth = 300;
     private static final int windowHeight = 600;
 
-    private static final String loginUrl = "https://passport.bilibili.com/login";
-    private static final Set<Cookie> cookieSet = new HashSet<>();
-
     private JTextArea textArea_messagePanel = new JTextArea();
     private JTextField textField_inputPanel = new JTextField();
     private JButton buttonSend_inputPanel = new JButton("send");
@@ -48,26 +48,14 @@ public class App {
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
-            loginFrame();
+            BiliApi.login();
             mainFrame();
         });
     }
 
-    private static void loginFrame(){
-        WebDriver browser = new ChromeDriver();
-        browser.get(loginUrl);
-        WebElement element = browser.findElement(By.id("login-username"));
-        element.sendKeys("maxwangein@gmail.com");
-        browser.findElement(By.id("login-passwd")).click();
-
-        //wait until logged in
-        WebDriverWait wait = new WebDriverWait(browser, 24 * 60 * 60);
-        wait.until(ExpectedConditions.urlToBe("https://passport.bilibili.com/account/security#/home"));
-
-        cookieSet.addAll(browser.manage().getCookies());
-        browser.close();
-    }
-
+    /**
+     * the chat window
+     */
     private static void mainFrame() {
         f.setResizable(false);
         f.setAlwaysOnTop( true );
@@ -179,4 +167,5 @@ public class App {
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         return panel;
     }
+
 }

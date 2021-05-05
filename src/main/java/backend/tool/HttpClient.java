@@ -13,11 +13,6 @@ public class HttpClient {
     private static final Object clientLock = new Object();
 
     public static OkHttpClient getClient() {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         if (client == null) {
             synchronized (clientLock) {
                 if (client == null) {
@@ -28,5 +23,9 @@ public class HttpClient {
             }
         }
         return client;
+    }
+
+    public static void setClient(OkHttpClient newClient){
+        client = newClient;
     }
 }
