@@ -1,3 +1,5 @@
+package frontend;
+
 import java.awt.*;
 
 public class JPanel extends javax.swing.JPanel {

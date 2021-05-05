@@ -1,10 +1,8 @@
+import frontend.JTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -16,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final App app = new App();
-    private static final JFrame f = new JFrame();
+    private static final frontend.JFrame f = new frontend.JFrame();
 
     private static final int windowWidth = 300;
     private static final int windowHeight = 600;
@@ -24,16 +22,16 @@ public class App {
 
     private JTextArea textArea_messagePanel = new JTextArea();
 
-    private JTextField textField_inputPanel = new JTextField();
-    private JButton buttonSend_inputPanel = new JButton("send");
+    private frontend.JTextField textField_inputPanel = new JTextField();
+    private frontend.JButton buttonSend_inputPanel = new frontend.JButton("send");
 
     private boolean noMessage = true;
 
     private static final Color TEXT_AREA_BACKGROUND_COLOR_DEFAULT = Color.BLACK;
     private static final Color TEXT_AREA_FOREGROUND_COLOR_DEFAULT = Color.WHITE;
 
-    private JPanel messagePanel() {
-        JPanel panel = new JPanel(f.getWidth(), f.getHeight() - 100);
+    private frontend.JPanel messagePanel() {
+        frontend.JPanel panel = new frontend.JPanel(f.getWidth(), f.getHeight() - 100);
 
         textArea_messagePanel.setEditable(false);
         textArea_messagePanel.setText("no message now...\n");
@@ -46,8 +44,8 @@ public class App {
     }
 
 
-    private JPanel inputPanel() {
-        JPanel panel = new JPanel();
+    private frontend.JPanel inputPanel() {
+        frontend.JPanel panel = new frontend.JPanel();
 
         String hint = "input your message here";
         textField_inputPanel.setHint(hint);
@@ -99,7 +97,7 @@ public class App {
             }
         });
 
-        buttonSend_inputPanel = new JButton("send");
+        buttonSend_inputPanel = new frontend.JButton("send");
         buttonSend_inputPanel.addActionListener(actionEvent -> {
             if (!hasInput.get()) {
                 return;
@@ -135,8 +133,8 @@ public class App {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         f.setLocation(screenSize.width - windowWidth - 200, (screenSize.height - windowHeight) / 2);
 
-        JPanel messagePanel = app.messagePanel();
-        JPanel inputPanel = app.inputPanel();
+        frontend.JPanel messagePanel = app.messagePanel();
+        frontend.JPanel inputPanel = app.inputPanel();
         f.add(messagePanel);
         f.add(inputPanel);
         f.setLayout(new BoxLayout(f.getContentPane(), BoxLayout.Y_AXIS));
