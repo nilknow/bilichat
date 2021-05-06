@@ -2,8 +2,13 @@ package backend;
 
 import backend.tool.HttpClient;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
+import net.bytebuddy.implementation.bind.annotation.Empty;
 import okhttp3.*;
+import okio.ByteString;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.openqa.selenium.*;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -15,9 +20,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class BiliApi {
     private static final Logger logger = LoggerFactory.getLogger(BiliApi.class);
@@ -29,6 +34,9 @@ public class BiliApi {
     private static final String startStreamUrl = "https://api.live.bilibili.com/room/v1/Room/startLive";
     private static final String stopStreamUrl = "https://api.live.bilibili.com/room/v1/Room/stopLive";
     private static final String sendMsgUrl = "https://api.live.bilibili.com/msg/send";
+    //api to get socket url
+    private static final String getSocketUrlUrl = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
+    private static final List<DanmuInfoDataHost> danmuWebsocketList = new ArrayList<>();
     private static final Set<Cookie> cookieSet = new HashSet<>();
 
     /**
@@ -143,6 +151,52 @@ public class BiliApi {
     }
 
     /**
+     * build websocket for 弹幕
+     */
+    public static void buildWebsocket(){
+        OkHttpClient client = new OkHttpClient.Builder().pingInterval(40, TimeUnit.SECONDS).build();
+        dmWebSocketUrl();
+        if (danmuWebsocketList.isEmpty()) {
+            logger.error("no danmu websocket url");
+            return;
+        }
+        Request request = new Request.Builder()
+                .url(danmuWebsocketList.get(0).host+"/sub" + ":" + danmuWebsocketList.get(0).wssPort)
+                .build();
+        client.newWebSocket(request, new WebSocketListener() {
+            @Override
+            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                super.onClosed(webSocket, code, reason);
+            }
+
+            @Override
+            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                super.onClosing(webSocket, code, reason);
+            }
+
+            @Override
+            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
+                super.onFailure(webSocket, t, response);
+            }
+
+            @Override
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                super.onMessage(webSocket, text);
+            }
+
+            @Override
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
+                super.onMessage(webSocket, bytes);
+            }
+
+            @Override
+            public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+                super.onOpen(webSocket, response);
+            }
+        });
+    }
+
+    /**
      * @return
      * @see backend.BiliApi#login() run this method first to init csrfToken
      */
@@ -168,6 +222,97 @@ public class BiliApi {
         }
         sb.delete(sb.length() - 2, sb.length());
         return sb.toString();
+    }
+
+    /**
+     * get websocket url to read 弹幕
+     */
+    @MightEmpty
+    public static void dmWebSocketUrl() {
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put("id", roomId);
+        headerMap.put("type", "0");
+        Headers headers=Headers.of(headerMap);
+        Request request = new Request.Builder()
+                .url(sendMsgUrl)
+                .get()
+                .headers(headers)
+                .build();
+        try (Response response = HttpClient.getClient().newCall(request).execute()) {
+            String responseStr = Objects.requireNonNull(response.body()).string();
+            logger.debug(responseStr);
+            DanmuInfo danmuInfo = new Gson().fromJson(responseStr, DanmuInfo.class);
+            danmuWebsocketList.clear();
+            danmuWebsocketList.addAll(danmuInfo.data.hostList);
+        } catch (IOException e) {
+            logger.error(e.toString());
+            danmuWebsocketList.clear();
+        }
+    }
+
+    private class DanmuInfo{
+        private DanmuInfoData data;
+
+        public DanmuInfoData getData() {
+            return data;
+        }
+
+        public void setData(DanmuInfoData data) {
+            this.data = data;
+        }
+    }
+    private class DanmuInfoData{
+        @SerializedName("host_list")
+        private List<DanmuInfoDataHost> hostList;
+
+        public List<DanmuInfoDataHost> getHostList() {
+            return hostList;
+        }
+
+        public void setHostList(List<DanmuInfoDataHost> hostList) {
+            this.hostList = hostList;
+        }
+    }
+
+    private class DanmuInfoDataHost {
+        private String host;
+        private Integer port;
+        @SerializedName("ws_port")
+        private Integer wsPort;
+        @SerializedName("wss_port")
+        private Integer wssPort;
+
+        public String getHost() {
+            return host;
+        }
+
+        public void setHost(String host) {
+            this.host = host;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
+
+        public void setPort(Integer port) {
+            this.port = port;
+        }
+
+        public Integer getWsPort() {
+            return wsPort;
+        }
+
+        public void setWsPort(Integer wsPort) {
+            this.wsPort = wsPort;
+        }
+
+        public Integer getWssPort() {
+            return wssPort;
+        }
+
+        public void setWssPort(Integer wssPort) {
+            this.wssPort = wssPort;
+        }
     }
 
     public static void main(String[] args) throws IOException {
