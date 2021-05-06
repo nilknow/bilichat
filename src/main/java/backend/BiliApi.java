@@ -4,7 +4,6 @@ import backend.tool.HttpClient;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
-import net.bytebuddy.implementation.bind.annotation.Empty;
 import okhttp3.*;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +21,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class BiliApi {
     private static final Logger logger = LoggerFactory.getLogger(BiliApi.class);
@@ -154,7 +152,7 @@ public class BiliApi {
      * build websocket for 弹幕
      */
     public static void buildWebsocket(){
-        OkHttpClient client = new OkHttpClient.Builder().pingInterval(40, TimeUnit.SECONDS).build();
+        OkHttpClient client = new OkHttpClient.Builder().pingInterval(30, TimeUnit.SECONDS).build();
         dmWebSocketUrl();
         if (danmuWebsocketList.isEmpty()) {
             logger.error("no danmu websocket url");
@@ -163,37 +161,7 @@ public class BiliApi {
         Request request = new Request.Builder()
                 .url(danmuWebsocketList.get(0).host+"/sub" + ":" + danmuWebsocketList.get(0).wssPort)
                 .build();
-        client.newWebSocket(request, new WebSocketListener() {
-            @Override
-            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                super.onClosed(webSocket, code, reason);
-            }
-
-            @Override
-            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                super.onClosing(webSocket, code, reason);
-            }
-
-            @Override
-            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-                super.onFailure(webSocket, t, response);
-            }
-
-            @Override
-            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                super.onMessage(webSocket, text);
-            }
-
-            @Override
-            public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
-                super.onMessage(webSocket, bytes);
-            }
-
-            @Override
-            public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-                super.onOpen(webSocket, response);
-            }
-        });
+        client.newWebSocket(request, new DmWebSocketListener());
     }
 
     /**

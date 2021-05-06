@@ -1,5 +1,6 @@
 import backend.BiliApi;
 import backend.tool.HttpClient;
+import frontend.*;
 import frontend.JButton;
 import frontend.JFrame;
 import frontend.JPanel;
@@ -97,6 +98,8 @@ public class App {
         jsp.setPreferredSize(panel.getPreferredSize());
 
         panel.add(jsp);
+        AppContext context = AppContext.instance();
+        context.add("textArea", app.textArea_messagePanel);
         return panel;
     }
 

@@ -9,14 +9,14 @@ import java.util.Map;
  * save all components in it.
  */
 public class AppContext {
-    private AppContext instance = null;
-    private final Object instanceLock = new Object();
+    private static AppContext instance = null;
+    private static final Object instanceLock = new Object();
 
     private static final Map<String, Component> cache = new HashMap<>();
 
     private AppContext(){}
 
-    public AppContext instance(){
+    public static AppContext instance(){
         if (instance == null) {
             synchronized (instanceLock){
                 if (instance == null) {
@@ -31,7 +31,7 @@ public class AppContext {
         cache.put(id, component);
     }
 
-    public void get(String id) {
-        cache.get(id);
+    public <T> T get(String id,Class<T> clazz) {
+        return (T)cache.get(id);
     }
 }
