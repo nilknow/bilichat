@@ -1,9 +1,9 @@
-package json;
+package dto;
 
 public class RoomInfo {
     private String liveStatus;
     /**
-     * @see json/area.json
+     * @see dto /area.json
      */
     private String areaId;
 

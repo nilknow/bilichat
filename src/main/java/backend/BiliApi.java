@@ -2,7 +2,7 @@ package backend;
 
 import backend.tool.HttpClient;
 import com.google.gson.Gson;
-import json.RoomInfo;
+import dto.RoomInfo;
 import okhttp3.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.Cookie;
@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -24,7 +26,11 @@ public class BiliApi {
     private static final String platform = "pc";
     private static String csrfToken = "";
     private static final String loginUrl = "https://passport.bilibili.com/login";
+    private static final String startStreamUrl = "https://api.live.bilibili.com/room/v1/Room/startLive";
+    private static final String stopStreamUrl = "https://api.live.bilibili.com/room/v1/Room/stopLive";
+    private static final String sendMsgUrl = "https://api.live.bilibili.com/msg/send";
     private static final Set<Cookie> cookieSet = new HashSet<>();
+
     /**
      * login: some api need to login first
      */
@@ -42,7 +48,7 @@ public class BiliApi {
         cookieSet.addAll(driver.manage().getCookies());
         String userAgent = (String) ((JavascriptExecutor) driver).executeScript("return navigator.userAgent;");
         for (Cookie cookie : cookieSet) {
-            if("bili_jct".equals(cookie.getName())){
+            if ("bili_jct".equals(cookie.getName())) {
                 csrfToken = cookie.getValue();
                 break;
             }
@@ -54,13 +60,13 @@ public class BiliApi {
     /**
      * init http client
      */
-    private static void initClient(String userAgent){
+    private static void initClient(String userAgent) {
         OkHttpClient cookieClient = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
                     Request original = chain.request();
                     Request cookieRequest = original.newBuilder()
                             .addHeader("Cookie", cookieToString())
-                            .addHeader("user-agent",userAgent)
+                            .addHeader("user-agent", userAgent)
                             .build();
                     return chain.proceed(cookieRequest);
                 }).build();
@@ -78,21 +84,18 @@ public class BiliApi {
         }
     }
 
-    public static boolean startStream(){
-        return startStream("9325157", "372", "pc", csrfToken);
+    public static boolean startStream() {
+        return startStream(roomId, "372", platform, csrfToken);
     }
+
     /**
      * start live stream
      */
     public static boolean startStream(String roomId, String areaId, String platform, String csrfToken) {
-        RequestBody requestBody = new FormBody.Builder()
-                .add("room_id", roomId)
+        RequestBody requestBody = requestBodyBuilder()
                 .add("area_v2", areaId)
-                .add("platform", platform)
-                .add("csrf", csrfToken)
-                .add("csrf_token", csrfToken)
                 .build();
-        Request request = new Request.Builder().url("https://api.live.bilibili.com/room/v1/Room/startLive")
+        Request request = new Request.Builder().url(startStreamUrl)
                 .post(requestBody).build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
             logger.debug(Objects.requireNonNull(response.body()).string());
@@ -105,14 +108,9 @@ public class BiliApi {
     /**
      * stop live stream
      */
-    public boolean stopStream(String csrf) {
-        RequestBody requestBody = new FormBody.Builder()
-                .add("room_id", roomId)
-                .add("platform", platform)
-                .add("csrf", csrf)
-                .add("csrf_token", csrf)
-                .build();
-        Request request = new Request.Builder().url(" https://api.live.bilibili.com/room/v1/Room/stopLive")
+    public static boolean stopStream(String csrf) {
+        RequestBody requestBody = requestBodyBuilder().build();
+        Request request = new Request.Builder().url(startStreamUrl)
                 .post(requestBody).build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
             logger.debug(Objects.requireNonNull(response.body()).string());
@@ -120,6 +118,41 @@ public class BiliApi {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    /**
+     * send message to your live stream room
+     */
+    public static void sendMessage(String msg) {
+        String rndStr = String.valueOf(Timestamp.from(Instant.now()).getTime());
+        RequestBody requestBody = requestBodyBuilder()
+                .add("bubble", "0")
+                .add("msg", msg)
+                .add("color", "16777215")//default, not necessary
+                .add("mode", DmType.NORMAL)
+                .add("fontsize", "25")//default, not necessary
+                .add("rnd", rndStr.substring(0, rndStr.length() - 3))
+                .build();
+        Request request = new Request.Builder().url(sendMsgUrl)
+                .post(requestBody).build();
+        try (Response response = HttpClient.getClient().newCall(request).execute()) {
+            logger.debug(Objects.requireNonNull(response.body()).string());
+        } catch (IOException e) {
+            logger.error(e.toString());
+        }
+    }
+
+    /**
+     * @return
+     * @see backend.BiliApi#login() run this method first to init csrfToken
+     */
+    private static FormBody.Builder requestBodyBuilder() {
+        return new FormBody.Builder()
+                .add("room_id", roomId)
+                .add("roomid", roomId)
+                .add("platform", platform)
+                .add("csrf", csrfToken)
+                .add("csrf_token", csrfToken);
     }
 
     /**
@@ -133,19 +166,20 @@ public class BiliApi {
                     .append(cookie.getValue())
                     .append("; ");
         }
-        sb.delete(sb.length() - 2,sb.length());
+        sb.delete(sb.length() - 2, sb.length());
         return sb.toString();
     }
 
-    //curl 'http://api.live.bilibili.com/room/v1/Room/startLive' \
-    //--data-urlencode 'room_id=9325157L' \
-    //--data-urlencode 'area_v2=27' \
-    //--data-urlencode 'platform=pc' \
-    //--data-urlencode 'csrf=xxx' \
-    //-b 'SESSDATA=xxx;bili_jct=xx'
-
     public static void main(String[] args) throws IOException {
-        System.out.println(new BiliApi().roomInfo("9325157"));
+//        System.out.println(new BiliApi().roomInfo("9325157"));
 //        System.out.println(new BiliApi().startStream("9325157", "372", "pc", "4a92355f9f9431c36bb1066e71d1c578"));
+        Instant instant = Instant.now();
+        Timestamp timestamp = Timestamp.from(instant);
+        long time = timestamp.getTime();
+        System.out.println(time);
+        System.out.println(timestamp.getNanos());
+        System.out.println(timestamp.toString());
+        String rndStr = String.valueOf(Timestamp.from(Instant.now()).getTime());
+        System.out.println(rndStr.substring(0, rndStr.length() - 3));
     }
 }

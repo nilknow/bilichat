@@ -48,7 +48,7 @@ public class App {
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
-//            BiliApi.login();
+            BiliApi.login();
             mainFrame();
         });
     }
@@ -169,6 +169,7 @@ public class App {
                 return;
             }
             textArea_messagePanel.append(input.trim() + "\n");
+            BiliApi.sendMessage(input.trim());
             log.debug("append message");
 
             hasInput.set(false);

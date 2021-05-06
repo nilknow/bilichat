@@ -18,7 +18,9 @@ public class HttpClient {
                 if (client == null) {
                     Proxy proxy = new Proxy(Proxy.Type.HTTP,
                             new InetSocketAddress("localhost", 23333));
-                    client = new OkHttpClient.Builder().proxy(proxy).build();
+                    client = new OkHttpClient.Builder()
+//                            .proxy(proxy)
+                            .build();
                 }
             }
         }
