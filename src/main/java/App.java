@@ -34,7 +34,7 @@ public class App {
     private static final JFrame f = new JFrame();
 
     private static final int windowWidth = 300;
-    private static final int windowHeight = 600;
+    private static final int windowHeight = 700;
 
     private JTextArea textArea_messagePanel = new JTextArea();
     private JTextField textField_inputPanel = new JTextField();
@@ -48,7 +48,7 @@ public class App {
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
-            BiliApi.login();
+//            BiliApi.login();
             mainFrame();
         });
     }
@@ -59,7 +59,10 @@ public class App {
     private static void mainFrame() {
         f.setResizable(false);
         f.setAlwaysOnTop( true );
-        f.setSize(windowWidth, windowHeight);
+        f.setUndecorated(true);
+        f.setPreferredSize(new Dimension(windowWidth, windowHeight));
+        f.pack();
+        f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         f.setLocation(screenSize.width - windowWidth - 200, (screenSize.height - windowHeight) / 2);
 
@@ -68,20 +71,32 @@ public class App {
         f.add(messagePanel);
         f.add(inputPanel);
         f.setLayout(new BoxLayout(f.getContentPane(), BoxLayout.Y_AXIS));
-        f.setUndecorated(true);
         f.setVisible(true);
     }
 
     private JPanel messagePanel() {
-        JPanel panel = new JPanel(f.getWidth(), f.getHeight() - 100);
+        JPanel panel = new JPanel(f.getPreferredSize().width, f.getPreferredSize().height - 100);
 
         textArea_messagePanel.setEditable(false);
-        textArea_messagePanel.setText("no message now...\n");
-        textArea_messagePanel.setPreferredSize(panel.getPreferredSize());
+        textArea_messagePanel.setLineWrap(true);
+
+        textArea_messagePanel.setText("no message now...no message now...no message now...no message now...no message now...\n");
+        textArea_messagePanel.append("a...\n");
+        textArea_messagePanel.append("b...\n");
+        textArea_messagePanel.append("c...\n");
+        textArea_messagePanel.append("d...\n");
+        textArea_messagePanel.append("e...\n");
+        textArea_messagePanel.append("f...\n");
+        textArea_messagePanel.append("g...\n");
+        textArea_messagePanel.append("h...\n");
+        textArea_messagePanel.append("i...\n");
+        textArea_messagePanel.append("j...\n");
         textArea_messagePanel.setBackground(TEXT_AREA_BACKGROUND_COLOR_DEFAULT);
         textArea_messagePanel.setForeground(TEXT_AREA_FOREGROUND_COLOR_DEFAULT);
+        JScrollPane jsp = new JScrollPane(textArea_messagePanel);
+        jsp.setPreferredSize(panel.getPreferredSize());
 
-        panel.add(textArea_messagePanel);
+        panel.add(jsp);
         return panel;
     }
 
@@ -154,6 +169,7 @@ public class App {
                 return;
             }
             textArea_messagePanel.append(input.trim() + "\n");
+            log.debug("append message");
 
             hasInput.set(false);
             //textField will lose focus first, so we need to set it manually
