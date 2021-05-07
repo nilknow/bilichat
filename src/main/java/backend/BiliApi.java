@@ -5,9 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
 import okhttp3.*;
-import okio.ByteString;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.openqa.selenium.*;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -25,7 +22,9 @@ import java.util.concurrent.TimeUnit;
 public class BiliApi {
     private static final Logger logger = LoggerFactory.getLogger(BiliApi.class);
 
-    private static final String roomId = "9325157";
+    public static final String uid = "247897641";
+    public static final String roomId = "9325157";
+    public static String webSocketFirstMessageToken = null;
     private static final String platform = "pc";
     private static String csrfToken = "";
     private static final String loginUrl = "https://passport.bilibili.com/login";
@@ -153,7 +152,7 @@ public class BiliApi {
      */
     public static void buildWebsocket(){
         OkHttpClient client = new OkHttpClient.Builder().pingInterval(30, TimeUnit.SECONDS).build();
-        dmWebSocketUrl();
+        setDmWebSocketUrl();
         if (danmuWebsocketList.isEmpty()) {
             logger.error("no danmu websocket url");
             return;
@@ -196,7 +195,7 @@ public class BiliApi {
      * get websocket url to read 弹幕
      */
     @MightEmpty
-    public static void dmWebSocketUrl() {
+    public static void setDmWebSocketUrl() {
         Map<String, String> headerMap = new HashMap<>();
         headerMap.put("id", roomId);
         headerMap.put("type", "0");
@@ -210,6 +209,7 @@ public class BiliApi {
             String responseStr = Objects.requireNonNull(response.body()).string();
             logger.debug(responseStr);
             DanmuInfo danmuInfo = new Gson().fromJson(responseStr, DanmuInfo.class);
+            webSocketFirstMessageToken = danmuInfo.data.token;
             danmuWebsocketList.clear();
             danmuWebsocketList.addAll(danmuInfo.data.hostList);
         } catch (IOException e) {
@@ -232,6 +232,16 @@ public class BiliApi {
     private class DanmuInfoData{
         @SerializedName("host_list")
         private List<DanmuInfoDataHost> hostList;
+
+        private String token;
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
+        }
 
         public List<DanmuInfoDataHost> getHostList() {
             return hostList;

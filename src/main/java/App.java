@@ -73,6 +73,8 @@ public class App {
         f.add(inputPanel);
         f.setLayout(new BoxLayout(f.getContentPane(), BoxLayout.Y_AXIS));
         f.setVisible(true);
+
+        BiliApi.buildWebsocket();
     }
 
     private JPanel messagePanel() {

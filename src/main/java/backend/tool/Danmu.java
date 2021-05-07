@@ -12,6 +12,10 @@ public class Danmu {
      */
     private List<Object> info;
 
+    public <T> T getInfoDetail(int index, Class<T> clazz) {
+        return (T) (info.get(index));
+    }
+
     public String getCmd() {
         return cmd;
     }
