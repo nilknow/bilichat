@@ -127,7 +127,6 @@ public class App {
 
             @Override
             public void keyReleased(KeyEvent e) {
-                log.debug("keyrelease");
                 if (textField_inputPanel.getText() == null || "".equals(textField_inputPanel.getText())) {
                     hasInput.set(false);
                     textField_inputPanel.setForeground(Color.GRAY);
@@ -142,7 +141,6 @@ public class App {
         textField_inputPanel.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                log.debug("focused");
                 if (!hasInput.get()) {
                     textField_inputPanel.setText("");
                     buttonSend_inputPanel.setEnabled(false);
@@ -173,9 +171,7 @@ public class App {
             if (input == null || input.isEmpty() || input.trim().isEmpty()) {
                 return;
             }
-            textArea_messagePanel.append(input.trim() + "\n");
             BiliApi.sendMessage(input.trim());
-            log.debug("append message");
 
             hasInput.set(false);
             //textField will lose focus first, so we need to set it manually

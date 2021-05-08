@@ -17,6 +17,8 @@ import javax.swing.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class DmWebSocketListener extends WebSocketListener {
     private static final Logger logger = LoggerFactory.getLogger(DmWebSocketListener.class);
@@ -35,7 +37,8 @@ public class DmWebSocketListener extends WebSocketListener {
 
     @Override
     public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-        super.onFailure(webSocket, t, response);
+        logger.error("websocket failed");
+        t.printStackTrace();
     }
 
     @Override
@@ -47,6 +50,7 @@ public class DmWebSocketListener extends WebSocketListener {
     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
         byte[] byteArray = bytes.toByteArray();
         if (isPingPong(byteArray)) {
+            logger.info("get pong");
             byte[] messageBytes = new byte[byteArray.length - 16];
             System.arraycopy(byteArray, 16, messageBytes, 0, byteArray.length - 16);
             Pong pong = new Gson().fromJson(new String(messageBytes), Pong.class);
@@ -59,14 +63,6 @@ public class DmWebSocketListener extends WebSocketListener {
             String danmuStr = danmu.getInfoDetail(1, String.class);
             textArea.append(danmuStr);
         }
-        super.onMessage(webSocket, bytes);
-    }
-
-    /**
-     * test if a message from serve is pingpong
-     */
-    private boolean isPingPong(byte[] byteArray) {
-        return byteArray[7] == 1;
     }
 
     @Override
@@ -76,6 +72,7 @@ public class DmWebSocketListener extends WebSocketListener {
         if (key == null) {
             logger.error("cannot build web socket connection");
         }
+        logger.info("websocket onopen");
         InitJson initJson = new InitJson(BiliApi.uid, Integer.parseInt(BiliApi.roomId), key);
         String json = new Gson().toJson(initJson);
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
@@ -83,36 +80,69 @@ public class DmWebSocketListener extends WebSocketListener {
         byte[] lengthBytes = ByteBuffer.allocate(4).putInt(totalLength).array();
 
         //deal with the first request
-        byte[] bytes = new byte[totalLength];
+        byte[] firstFrame = new byte[totalLength];
         //set length
-        System.arraycopy(lengthBytes, 0, bytes, 0, 4);
+        System.arraycopy(lengthBytes, 0, firstFrame, 0, 4);
         //set header length
-        bytes[4] = 0;
-        bytes[5] = 16;
+        firstFrame[4] = 0;
+        firstFrame[5] = 16;
         //set proto version
-        bytes[6] = 0;
-        bytes[7] = 1;
+        firstFrame[6] = 0;
+        firstFrame[7] = 1;
         //set operation type
-        bytes[8] = 0;
-        bytes[9] = 0;
-        bytes[10] = 0;
-        bytes[11] = 7;
+        firstFrame[8] = 0;
+        firstFrame[9] = 0;
+        firstFrame[10] = 0;
+        firstFrame[11] = 7;
         //I don't know what this value for
-        bytes[12] = 0;
-        bytes[13] = 0;
-        bytes[14] = 0;
-        bytes[15] = 1;
+        firstFrame[12] = 0;
+        firstFrame[13] = 0;
+        firstFrame[14] = 0;
+        firstFrame[15] = 1;
         //set content
-        System.arraycopy(jsonBytes, 0, bytes, 16, jsonBytes.length);
-
-        webSocket.send(new ByteString(bytes));
-        super.onOpen(webSocket, response);
+        System.arraycopy(jsonBytes, 0, firstFrame, 16, jsonBytes.length);
+        webSocket.send(new ByteString(firstFrame));
         logger.info("websocket connection built");
+
+        //heartbeat
+        byte[] heartbeat = new byte[31];
+        heartbeat[0]=0;
+        heartbeat[1]=0;
+        heartbeat[2]=0;
+        heartbeat[3]=31;
+        heartbeat[4] = 0;
+        heartbeat[5] = 16;
+        heartbeat[6] = 0;
+        heartbeat[7] = 1;
+        heartbeat[8] = 0;
+        heartbeat[9] = 0;
+        heartbeat[10] = 0;
+        heartbeat[11] = 2;
+        heartbeat[12] = 0;
+        heartbeat[13] = 0;
+        heartbeat[14] = 0;
+        heartbeat[15] = 1;
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                webSocket.send(new ByteString(heartbeat));
+                logger.info("send ping");
+            }
+        },0L,30*1000L);
     }
 
-    //todo analyse websocket message
+    /**
+     * test if a message is danmu
+     */
     private boolean isDm(byte[] bytes) {
         return bytes[7] == 2;
+    }
+
+    /**
+     * test if a message from serve is pingpong
+     */
+    private boolean isPingPong(byte[] byteArray) {
+        return byteArray[7] == 1;
     }
 
     private class InitJson {

@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
 import okhttp3.*;
+import okhttp3.internal.ws.WebSocketReader;
 import org.openqa.selenium.*;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -157,9 +158,13 @@ public class BiliApi {
             logger.error("no danmu websocket url");
             return;
         }
+        String url = "wss://" + danmuWebsocketList.get(0).host + "/sub";
+        logger.info(url);
         Request request = new Request.Builder()
-                .url(danmuWebsocketList.get(0).host+"/sub" + ":" + danmuWebsocketList.get(0).wssPort)
+                .header("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
+                .url(url)
                 .build();
+        logger.info("start to build websocket connection");
         client.newWebSocket(request, new DmWebSocketListener());
     }
 
@@ -196,19 +201,16 @@ public class BiliApi {
      */
     @MightEmpty
     public static void setDmWebSocketUrl() {
-        Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("id", roomId);
-        headerMap.put("type", "0");
-        Headers headers=Headers.of(headerMap);
         Request request = new Request.Builder()
-                .url(sendMsgUrl)
-                .get()
-                .headers(headers)
-                .build();
+                .url(getSocketUrlUrl + "?id=" + roomId + "&type=0").build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
             String responseStr = Objects.requireNonNull(response.body()).string();
-            logger.debug(responseStr);
+            logger.info(responseStr);
             DanmuInfo danmuInfo = new Gson().fromJson(responseStr, DanmuInfo.class);
+            if (danmuInfo.code != 0) {
+                logger.error("cannot get danmu web socket url");
+                logger.error(responseStr);
+            }
             webSocketFirstMessageToken = danmuInfo.data.token;
             danmuWebsocketList.clear();
             danmuWebsocketList.addAll(danmuInfo.data.hostList);
@@ -220,6 +222,16 @@ public class BiliApi {
 
     private class DanmuInfo{
         private DanmuInfoData data;
+
+        private Integer code;
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public void setCode(Integer code) {
+            this.code = code;
+        }
 
         public DanmuInfoData getData() {
             return data;
@@ -296,13 +308,6 @@ public class BiliApi {
     public static void main(String[] args) throws IOException {
 //        System.out.println(new BiliApi().roomInfo("9325157"));
 //        System.out.println(new BiliApi().startStream("9325157", "372", "pc", "4a92355f9f9431c36bb1066e71d1c578"));
-        Instant instant = Instant.now();
-        Timestamp timestamp = Timestamp.from(instant);
-        long time = timestamp.getTime();
-        System.out.println(time);
-        System.out.println(timestamp.getNanos());
-        System.out.println(timestamp.toString());
-        String rndStr = String.valueOf(Timestamp.from(Instant.now()).getTime());
-        System.out.println(rndStr.substring(0, rndStr.length() - 3));
+        setDmWebSocketUrl();
     }
 }
