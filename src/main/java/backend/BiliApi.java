@@ -152,7 +152,9 @@ public class BiliApi {
      * build websocket for 弹幕
      */
     public static void buildWebsocket(){
-        OkHttpClient client = new OkHttpClient.Builder().pingInterval(30, TimeUnit.SECONDS).build();
+        OkHttpClient client = new OkHttpClient.Builder()
+//                .pingInterval(30, TimeUnit.SECONDS)
+                .build();
         setDmWebSocketUrl();
         if (danmuWebsocketList.isEmpty()) {
             logger.error("no danmu websocket url");
@@ -162,6 +164,8 @@ public class BiliApi {
         logger.info(url);
         Request request = new Request.Builder()
                 .header("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
+                .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,de;q=0.7,en-US;q=0.6")
+                .header("Origin", "https://live.bilibili.com")
                 .url(url)
                 .build();
         logger.info("start to build websocket connection");

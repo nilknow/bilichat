@@ -1,6 +1,7 @@
 package backend.tool;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.zip.InflaterInputStream;
@@ -24,6 +25,16 @@ public class Zlib {
                     + Character.digit(hexStr.charAt(i + 1), 16));
         }
         return inflate(bytes);
+    }
+
+    public static String hexStrToStr(String hexStr, Charset charset){
+        int len = hexStr.length();
+        byte[] bytes = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            bytes[i / 2] = (byte) ((Character.digit(hexStr.charAt(i), 16) << 4)
+                    + Character.digit(hexStr.charAt(i + 1), 16));
+        }
+        return new String(bytes, charset);
     }
 
     public static void main(String[] args) {

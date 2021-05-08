@@ -43,18 +43,19 @@ public class DmWebSocketListener extends WebSocketListener {
 
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-        super.onMessage(webSocket, text);
+        logger.info("onmessage str");
     }
 
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
+        logger.info("onMessage");
         byte[] byteArray = bytes.toByteArray();
         if (isPingPong(byteArray)) {
             logger.info("get pong");
             byte[] messageBytes = new byte[byteArray.length - 16];
             System.arraycopy(byteArray, 16, messageBytes, 0, byteArray.length - 16);
             Pong pong = new Gson().fromJson(new String(messageBytes), Pong.class);
-            logger.info("popular index value is: "+pong.code);
+            logger.info("popular index value is: " + pong.code);
         } else if (isDm(byteArray)) {
             AppContext context = AppContext.instance();
             JTextArea textArea = context.get("textArea", JTextArea.class);
@@ -72,10 +73,10 @@ public class DmWebSocketListener extends WebSocketListener {
         if (key == null) {
             logger.error("cannot build web socket connection");
         }
-        logger.info("websocket onopen");
         InitJson initJson = new InitJson(BiliApi.uid, Integer.parseInt(BiliApi.roomId), key);
         String json = new Gson().toJson(initJson);
-        byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
+        System.out.println(json);
+        byte[] jsonBytes = json.getBytes(StandardCharsets.US_ASCII);
         int totalLength = jsonBytes.length + 16;
         byte[] lengthBytes = ByteBuffer.allocate(4).putInt(totalLength).array();
 
@@ -101,15 +102,25 @@ public class DmWebSocketListener extends WebSocketListener {
         firstFrame[15] = 1;
         //set content
         System.arraycopy(jsonBytes, 0, firstFrame, 16, jsonBytes.length);
+        char[] cs = new char[firstFrame.length * 2];
+        char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+        for (int i = 0; i < firstFrame.length; i++) {
+            int num = firstFrame[i] & 0xFF;
+            cs[i * 2] = HEX_ARRAY[num >>> 4];
+            cs[i * 2+1] = HEX_ARRAY[num & 0x0F];
+        }
+        System.out.println(new String(cs));
+        System.out.println(Zlib.hexStrToStr(new String(cs),StandardCharsets.US_ASCII));
+        logger.info("send");
         webSocket.send(new ByteString(firstFrame));
-        logger.info("websocket connection built");
+        logger.info("websocket onopen");
 
         //heartbeat
         byte[] heartbeat = new byte[31];
-        heartbeat[0]=0;
-        heartbeat[1]=0;
-        heartbeat[2]=0;
-        heartbeat[3]=31;
+        heartbeat[0] = 0;
+        heartbeat[1] = 0;
+        heartbeat[2] = 0;
+        heartbeat[3] = 31;
         heartbeat[4] = 0;
         heartbeat[5] = 16;
         heartbeat[6] = 0;
@@ -122,13 +133,15 @@ public class DmWebSocketListener extends WebSocketListener {
         heartbeat[13] = 0;
         heartbeat[14] = 0;
         heartbeat[15] = 1;
+        byte[] heartbeatMsg = "[object Object]".getBytes(StandardCharsets.US_ASCII);
+        System.arraycopy(heartbeatMsg, 0, heartbeat, 16, heartbeatMsg.length);
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 webSocket.send(new ByteString(heartbeat));
                 logger.info("send ping");
             }
-        },0L,30*1000L);
+        }, 10 * 1000L, 30 * 1000L);
     }
 
     /**
@@ -146,6 +159,7 @@ public class DmWebSocketListener extends WebSocketListener {
     }
 
     private class InitJson {
+
         private String uid;
         private int roomid;
         private String protover = "2";
@@ -161,7 +175,7 @@ public class DmWebSocketListener extends WebSocketListener {
 
     }
 
-    private class Pong{
+    private class Pong {
         private Integer code;
     }
 
