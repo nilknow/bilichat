@@ -156,8 +156,25 @@ public class App {
                 }
             }
         });
+        textField_inputPanel.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
 
-        buttonSend_inputPanel = new JButton("send");
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    buttonSend_inputPanel.doClick();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
+
         buttonSend_inputPanel.addActionListener(actionEvent -> {
             if (!hasInput.get()) {
                 return;
@@ -182,24 +199,6 @@ public class App {
             //textField will lose focus first, so we need to set it manually
             textField_inputPanel.setText(hint);
             textField_inputPanel.setForeground(Color.GRAY);
-        });
-        buttonSend_inputPanel.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    buttonSend_inputPanel.doClick();
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
-            }
         });
         buttonSend_inputPanel.setEnabled(false);
 
