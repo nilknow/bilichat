@@ -50,6 +50,10 @@ public class App {
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
             BiliApi.login();
+            boolean isStreamStart = BiliApi.startStream();
+            if (!isStreamStart) {
+                log.error("stream can't start");
+            }
             mainFrame();
         });
     }
