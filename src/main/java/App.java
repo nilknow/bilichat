@@ -166,6 +166,8 @@ public class App {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     buttonSend_inputPanel.doClick();
+                    textArea_messagePanel.setText("");
+                    hasInput.set(false);
                 }
             }
 
