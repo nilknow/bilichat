@@ -1,4 +1,4 @@
-package backend.tool;
+package dto;
 
 import java.util.List;
 

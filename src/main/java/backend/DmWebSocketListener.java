@@ -1,6 +1,6 @@
 package backend;
 
-import backend.tool.Danmu;
+import dto.Danmu;
 import backend.tool.Zlib;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -18,7 +18,6 @@ import javax.swing.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Timer;
 import java.util.TimerTask;
 
