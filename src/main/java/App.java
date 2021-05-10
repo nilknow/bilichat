@@ -83,17 +83,8 @@ public class App {
         textArea_messagePanel.setEditable(false);
         textArea_messagePanel.setLineWrap(true);
 
-        textArea_messagePanel.setText("no message now...no message now...no message now...no message now...no message now...\n");
-        textArea_messagePanel.append("a...\n");
-        textArea_messagePanel.append("b...\n");
-        textArea_messagePanel.append("c...\n");
-        textArea_messagePanel.append("d...\n");
-        textArea_messagePanel.append("e...\n");
-        textArea_messagePanel.append("f...\n");
-        textArea_messagePanel.append("g...\n");
-        textArea_messagePanel.append("h...\n");
-        textArea_messagePanel.append("i...\n");
-        textArea_messagePanel.append("j...\n");
+        textArea_messagePanel.setText("enter room...\n");
+
         textArea_messagePanel.setBackground(TEXT_AREA_BACKGROUND_COLOR_DEFAULT);
         textArea_messagePanel.setForeground(TEXT_AREA_FOREGROUND_COLOR_DEFAULT);
         JScrollPane jsp = new JScrollPane(textArea_messagePanel);

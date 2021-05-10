@@ -14,7 +14,7 @@ public class Zlib {
 
         InputStream is = new InflaterInputStream(new ByteArrayInputStream(bytes));
         return new BufferedReader(new InputStreamReader(is))
-                .lines().collect(Collectors.joining("\n"));
+                .lines().collect(Collectors.joining(""));
     }
 
     public static String inflate(String hexStr) {

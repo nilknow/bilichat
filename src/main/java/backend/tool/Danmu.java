@@ -16,6 +16,10 @@ public class Danmu {
         return (T) (info.get(index));
     }
 
+    public <T> T getUserName(Class<T> clazz) {
+        return (T) (((List) (info.get(2))).get(1));
+    }
+
     public String getCmd() {
         return cmd;
     }
