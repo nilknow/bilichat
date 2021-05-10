@@ -82,11 +82,14 @@ public class BiliApi {
     /**
      * get live stream room info
      */
-    public RoomInfo roomInfo(String roomId) throws IOException {
+    public static RoomInfo roomInfo(String roomId) {
         Request request = new Request.Builder()
                 .url("https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId).get().build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
+            logger.info(Objects.requireNonNull(response.body()).string());
             return new Gson().fromJson(Objects.requireNonNull(response.body()).string(), RoomInfo.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 

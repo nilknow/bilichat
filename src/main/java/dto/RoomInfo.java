@@ -1,7 +1,12 @@
 package dto;
 
 public class RoomInfo {
-    private String liveStatus;
+
+    /**
+     * 0: closed
+     * 1: open
+     */
+    private Integer liveStatus;
     /**
      * @see dto /area.json
      */
@@ -15,11 +20,11 @@ public class RoomInfo {
         this.areaId = areaId;
     }
 
-    public String getLiveStatus() {
+    public Integer getLiveStatus() {
         return liveStatus;
     }
 
-    public void setLiveStatus(String liveStatus) {
+    public void setLiveStatus(Integer liveStatus) {
         this.liveStatus = liveStatus;
     }
 }

@@ -63,11 +63,16 @@ public class DmWebSocketListener extends WebSocketListener {
                 logger.error("can't parse as Pong json");
                 logger.error(new String(messageBytes));
             }
-        } else if (isDm(byteArray)) {
+        } else if (isZipMsg(byteArray)) {
             byte[] zlibMsg = Arrays.copyOfRange(byteArray, 16, byteArray.length);
             String msg = Zlib.inflate(zlibMsg);
             String jsonStr = msg.substring(msg.indexOf("{"));
             Danmu danmu = new Gson().fromJson(jsonStr, Danmu.class);
+            logger.info(jsonStr);
+            if (!"DANMU_MSG".equals(danmu.getCmd())) {
+                return;
+            }
+
             String danmuStr = danmu.getInfoDetail(1, String.class);
             String user = danmu.getUserName(String.class);
             danmuStr = user+ " > " + danmuStr + "\n";
@@ -149,7 +154,7 @@ public class DmWebSocketListener extends WebSocketListener {
     /**
      * test if a message is danmu
      */
-    private boolean isDm(byte[] bytes) {
+    private boolean isZipMsg(byte[] bytes) {
         return bytes[7] == 2;
     }
 

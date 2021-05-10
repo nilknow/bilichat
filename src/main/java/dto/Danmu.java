@@ -13,7 +13,12 @@ public class Danmu {
     private List<Object> info;
 
     public <T> T getInfoDetail(int index, Class<T> clazz) {
-        return (T) (info.get(index));
+        try {
+            T result = (T) (info.get(index));
+            return result;
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     public <T> T getUserName(Class<T> clazz) {

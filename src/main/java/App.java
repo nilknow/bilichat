@@ -1,5 +1,6 @@
 import backend.BiliApi;
 import backend.tool.HttpClient;
+import dto.RoomInfo;
 import frontend.*;
 import frontend.JButton;
 import frontend.JFrame;
@@ -50,11 +51,17 @@ public class App {
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
             BiliApi.login();
-            boolean isStreamStart = BiliApi.startStream();
-            if (!isStreamStart) {
-                log.error("stream can't start");
+
+            RoomInfo roomInfo = BiliApi.roomInfo(BiliApi.roomId);
+            if (roomInfo != null&&roomInfo.getLiveStatus()!=null&&roomInfo.getLiveStatus()==0) {
+                boolean isStreamStart = BiliApi.startStream();
+                if (!isStreamStart) {
+                    log.error("stream can't start");
+                }
             }
+
             mainFrame();
+            BiliApi.buildWebsocket();
         });
     }
 
@@ -77,8 +84,6 @@ public class App {
         f.add(inputPanel);
         f.setLayout(new BoxLayout(f.getContentPane(), BoxLayout.Y_AXIS));
         f.setVisible(true);
-
-        BiliApi.buildWebsocket();
     }
 
     private JPanel messagePanel() {
@@ -166,6 +171,11 @@ public class App {
             if (input == null || input.isEmpty() || input.trim().isEmpty()) {
                 return;
             }
+            if (input.trim().length() > 20) {
+                return;
+            }
+            textArea_messagePanel.append("您当前输入内容长度大于b站限制");
+
             BiliApi.sendMessage(input.trim());
 
             hasInput.set(false);
@@ -173,7 +183,26 @@ public class App {
             textField_inputPanel.setText(hint);
             textField_inputPanel.setForeground(Color.GRAY);
         });
+        buttonSend_inputPanel.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    buttonSend_inputPanel.doClick();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
         buttonSend_inputPanel.setEnabled(false);
+
 
         panel.add(textField_inputPanel);
         panel.add(buttonSend_inputPanel);
