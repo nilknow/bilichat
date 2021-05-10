@@ -172,9 +172,9 @@ public class App {
                 return;
             }
             if (input.trim().length() > 20) {
+                textArea_messagePanel.append("您当前输入内容长度大于b站限制");
                 return;
             }
-            textArea_messagePanel.append("您当前输入内容长度大于b站限制");
 
             BiliApi.sendMessage(input.trim());
 
