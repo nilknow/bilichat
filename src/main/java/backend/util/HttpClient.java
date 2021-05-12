@@ -1,5 +1,6 @@
-package backend.tool;
+package backend.util;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,8 +8,11 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 
+/**
+ * the only http client of the application, don't use any other httpclient
+ */
+@Slf4j
 public class HttpClient {
-    private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
     private static volatile OkHttpClient client = null;
     private static final Object clientLock = new Object();
 
@@ -16,11 +20,7 @@ public class HttpClient {
         if (client == null) {
             synchronized (clientLock) {
                 if (client == null) {
-                    Proxy proxy = new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", 23333));
-                    client = new OkHttpClient.Builder()
-//                            .proxy(proxy)
-                            .build();
+                    client = new OkHttpClient.Builder().build();
                 }
             }
         }

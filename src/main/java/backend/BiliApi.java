@@ -1,11 +1,11 @@
 package backend;
 
-import backend.tool.HttpClient;
+import backend.util.HttpClient;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import okhttp3.internal.ws.WebSocketReader;
 import org.openqa.selenium.*;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -18,65 +18,28 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class BiliApi {
-    private static final Logger logger = LoggerFactory.getLogger(BiliApi.class);
-
     public static final String uid = "247897641";
     public static final String roomId = "9325157";
     public static String webSocketFirstMessageToken = null;
     private static final String platform = "pc";
-    private static String csrfToken = "";
-    private static final String loginUrl = "https://passport.bilibili.com/login";
     private static final String startStreamUrl = "https://api.live.bilibili.com/room/v1/Room/startLive";
     private static final String stopStreamUrl = "https://api.live.bilibili.com/room/v1/Room/stopLive";
     private static final String sendMsgUrl = "https://api.live.bilibili.com/msg/send";
     //api to get socket url
     private static final String getSocketUrlUrl = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
     private static final List<DanmuInfoDataHost> danmuWebsocketList = new ArrayList<>();
-    private static final Set<Cookie> cookieSet = new HashSet<>();
 
-    /**
-     * login: some api need to login first
-     */
-    public static void login() {
-        WebDriver driver = new ChromeDriver();
-        driver.get(loginUrl);
-        WebElement element = driver.findElement(By.id("login-username"));
-        element.sendKeys("maxwangein@gmail.com");
-        driver.findElement(By.id("login-passwd")).click();
-
-        //wait until logged in
-        WebDriverWait wait = new WebDriverWait(driver, 24 * 60 * 60);
-        wait.until(ExpectedConditions.urlToBe("https://passport.bilibili.com/account/security#/home"));
-
-        cookieSet.addAll(driver.manage().getCookies());
-        String userAgent = (String) ((JavascriptExecutor) driver).executeScript("return navigator.userAgent;");
-        for (Cookie cookie : cookieSet) {
-            if ("bili_jct".equals(cookie.getName())) {
-                csrfToken = cookie.getValue();
-                break;
+    public static void startStreamIfNot() {
+        RoomInfo roomInfo = BiliApi.roomInfo(BiliApi.roomId);
+        if (roomInfo != null&&roomInfo.getLiveStatus()!=null&&roomInfo.getLiveStatus()==0) {
+            boolean isStreamStart = BiliApi.startStream();
+            if (!isStreamStart) {
+                log.error("stream can't start");
             }
         }
-        driver.close();
-        initClient(userAgent);
-    }
-
-    /**
-     * init http client
-     */
-    private static void initClient(String userAgent) {
-        OkHttpClient cookieClient = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    Request original = chain.request();
-                    Request cookieRequest = original.newBuilder()
-                            .addHeader("Cookie", cookieToString())
-                            .addHeader("user-agent", userAgent)
-                            .build();
-                    return chain.proceed(cookieRequest);
-                }).build();
-        HttpClient.setClient(cookieClient);
     }
 
     /**
@@ -86,7 +49,7 @@ public class BiliApi {
         Request request = new Request.Builder()
                 .url("https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId).get().build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
-            logger.info(Objects.requireNonNull(response.body()).string());
+            log.info(Objects.requireNonNull(response.body()).string());
             return new Gson().fromJson(Objects.requireNonNull(response.body()).string(), RoomInfo.class);
         } catch (Exception e) {
             return null;
@@ -94,7 +57,7 @@ public class BiliApi {
     }
 
     public static boolean startStream() {
-        return startStream(roomId, "372", platform, csrfToken);
+        return startStream(roomId, "372", platform, LoginApi.csrfToken);
     }
 
     /**
@@ -107,7 +70,7 @@ public class BiliApi {
         Request request = new Request.Builder().url(startStreamUrl)
                 .post(requestBody).build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
-            logger.debug(Objects.requireNonNull(response.body()).string());
+            log.debug(Objects.requireNonNull(response.body()).string());
             return true;
         } catch (IOException e) {
             return false;
@@ -122,7 +85,7 @@ public class BiliApi {
         Request request = new Request.Builder().url(startStreamUrl)
                 .post(requestBody).build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
-            logger.debug(Objects.requireNonNull(response.body()).string());
+            log.debug(Objects.requireNonNull(response.body()).string());
             return true;
         } catch (IOException e) {
             return false;
@@ -145,9 +108,9 @@ public class BiliApi {
         Request request = new Request.Builder().url(sendMsgUrl)
                 .post(requestBody).build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
-            logger.debug(Objects.requireNonNull(response.body()).string());
+            log.debug(Objects.requireNonNull(response.body()).string());
         } catch (IOException e) {
-            logger.error(e.toString());
+            log.error(e.toString());
         }
     }
 
@@ -160,47 +123,32 @@ public class BiliApi {
                 .build();
         setDmWebSocketUrl();
         if (danmuWebsocketList.isEmpty()) {
-            logger.error("no danmu websocket url");
+            log.error("no danmu websocket url");
             return;
         }
         String url = "wss://" + danmuWebsocketList.get(0).host + "/sub";
-        logger.info(url);
+        log.info(url);
         Request request = new Request.Builder()
                 .header("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
                 .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,de;q=0.7,en-US;q=0.6")
                 .header("Origin", "https://live.bilibili.com")
                 .url(url)
                 .build();
-        logger.info("start to build websocket connection");
+        log.info("start to build websocket connection");
         client.newWebSocket(request, new DmWebSocketListener());
     }
 
     /**
      * @return
-     * @see backend.BiliApi#login() run this method first to init csrfToken
+     * @see backend.LoginApi#login() run this method first to init csrfToken
      */
     private static FormBody.Builder requestBodyBuilder() {
         return new FormBody.Builder()
                 .add("room_id", roomId)
                 .add("roomid", roomId)
                 .add("platform", platform)
-                .add("csrf", csrfToken)
-                .add("csrf_token", csrfToken);
-    }
-
-    /**
-     * cookie to string
-     */
-    private static String cookieToString() {
-        StringBuilder sb = new StringBuilder();
-        for (Cookie cookie : BiliApi.cookieSet) {
-            sb.append(cookie.getName())
-                    .append("=")
-                    .append(cookie.getValue())
-                    .append("; ");
-        }
-        sb.delete(sb.length() - 2, sb.length());
-        return sb.toString();
+                .add("csrf", LoginApi.csrfToken)
+                .add("csrf_token", LoginApi.csrfToken);
     }
 
     /**
@@ -212,17 +160,17 @@ public class BiliApi {
                 .url(getSocketUrlUrl + "?id=" + roomId + "&type=0").build();
         try (Response response = HttpClient.getClient().newCall(request).execute()) {
             String responseStr = Objects.requireNonNull(response.body()).string();
-            logger.info(responseStr);
+            log.info(responseStr);
             DanmuInfo danmuInfo = new Gson().fromJson(responseStr, DanmuInfo.class);
             if (danmuInfo.code != 0) {
-                logger.error("cannot get danmu web socket url");
-                logger.error(responseStr);
+                log.error("cannot get danmu web socket url");
+                log.error(responseStr);
             }
             webSocketFirstMessageToken = danmuInfo.data.token;
             danmuWebsocketList.clear();
             danmuWebsocketList.addAll(danmuInfo.data.hostList);
         } catch (IOException e) {
-            logger.error(e.toString());
+            log.error(e.toString());
             danmuWebsocketList.clear();
         }
     }
@@ -313,8 +261,5 @@ public class BiliApi {
     }
 
     public static void main(String[] args) throws IOException {
-//        System.out.println(new BiliApi().roomInfo("9325157"));
-//        System.out.println(new BiliApi().startStream("9325157", "372", "pc", "4a92355f9f9431c36bb1066e71d1c578"));
-        setDmWebSocketUrl();
     }
 }

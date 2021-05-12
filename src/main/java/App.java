@@ -1,20 +1,12 @@
 import backend.BiliApi;
-import backend.tool.HttpClient;
+import backend.LoginApi;
 import dto.RoomInfo;
 import frontend.*;
 import frontend.JButton;
 import frontend.JFrame;
 import frontend.JPanel;
 import frontend.JTextField;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +16,11 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public class App {
-    private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final App app = new App();
     private static final JFrame f = new JFrame();
 
@@ -50,15 +39,8 @@ public class App {
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
-            BiliApi.login();
-
-            RoomInfo roomInfo = BiliApi.roomInfo(BiliApi.roomId);
-            if (roomInfo != null&&roomInfo.getLiveStatus()!=null&&roomInfo.getLiveStatus()==0) {
-                boolean isStreamStart = BiliApi.startStream();
-                if (!isStreamStart) {
-                    log.error("stream can't start");
-                }
-            }
+            LoginApi.login();
+            BiliApi.startStreamIfNot();
 
             mainFrame();
             BiliApi.buildWebsocket();
