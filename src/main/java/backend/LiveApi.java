@@ -4,27 +4,24 @@ import backend.util.HttpClient;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.openqa.selenium.*;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
-public class BiliApi {
+public class LiveApi {
     public static final String uid = "247897641";
     public static final String roomId = "9325157";
     public static String webSocketFirstMessageToken = null;
     private static final String platform = "pc";
+    private static final String getWebAreaListUrl = "https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2";
     private static final String startStreamUrl = "https://api.live.bilibili.com/room/v1/Room/startLive";
     private static final String stopStreamUrl = "https://api.live.bilibili.com/room/v1/Room/stopLive";
     private static final String sendMsgUrl = "https://api.live.bilibili.com/msg/send";
@@ -32,10 +29,46 @@ public class BiliApi {
     private static final String getSocketUrlUrl = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
     private static final List<DanmuInfoDataHost> danmuWebsocketList = new ArrayList<>();
 
+    /**
+     * get live area list
+     */
+    @MightEmpty
+    public static List<Area> getWebAreaList() {
+        String respBody = HttpClient.getRespBodyWithCookie(getWebAreaListUrl);
+        if (respBody == null) {
+            log.error("there are not areas, this shouldn't happen");
+            return new ArrayList<>();
+        }
+
+        return new Gson().fromJson(respBody, GetWebAreaListResp.class).data
+                .stream().map(RootArea::getList).flatMap(Collection::stream)
+                .collect(Collectors.toList());
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    private class GetWebAreaListResp extends StandardResp {
+        private List<RootArea> data;
+    }
+
+    @Data
+    private class RootArea {
+        private Integer id;
+        private String name;
+        private List<Area> list;
+    }
+
+
+    @Data
+    public class Area {
+        private Integer id;
+        private String name;
+    }
+
     public static void startStreamIfNot() {
-        RoomInfo roomInfo = BiliApi.roomInfo(BiliApi.roomId);
-        if (roomInfo != null&&roomInfo.getLiveStatus()!=null&&roomInfo.getLiveStatus()==0) {
-            boolean isStreamStart = BiliApi.startStream();
+        RoomInfo roomInfo = LiveApi.roomInfo(LiveApi.roomId);
+        if (roomInfo != null && roomInfo.getLiveStatus() != null && roomInfo.getLiveStatus() == 0) {
+            boolean isStreamStart = LiveApi.startStream();
             if (!isStreamStart) {
                 log.error("stream can't start");
             }
@@ -117,7 +150,7 @@ public class BiliApi {
     /**
      * build websocket for 弹幕
      */
-    public static void buildWebsocket(){
+    public static void buildWebsocket() {
         OkHttpClient client = new OkHttpClient.Builder()
 //                .pingInterval(30, TimeUnit.SECONDS)
                 .build();
@@ -129,7 +162,7 @@ public class BiliApi {
         String url = "wss://" + danmuWebsocketList.get(0).host + "/sub";
         log.info(url);
         Request request = new Request.Builder()
-                .header("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
+                .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
                 .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,de;q=0.7,en-US;q=0.6")
                 .header("Origin", "https://live.bilibili.com")
                 .url(url)
@@ -175,7 +208,7 @@ public class BiliApi {
         }
     }
 
-    private class DanmuInfo{
+    private class DanmuInfo {
         private DanmuInfoData data;
 
         private Integer code;
@@ -196,7 +229,8 @@ public class BiliApi {
             this.data = data;
         }
     }
-    private class DanmuInfoData{
+
+    private class DanmuInfoData {
         @SerializedName("host_list")
         private List<DanmuInfoDataHost> hostList;
 

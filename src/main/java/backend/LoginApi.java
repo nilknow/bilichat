@@ -1,5 +1,6 @@
 package backend;
 
+import backend.util.FileUtil;
 import backend.util.HttpClient;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -51,6 +52,7 @@ public class LoginApi {
                             .build();
                     return chain.proceed(cookieRequest);
                 }).build();
+        FileUtil.writeToFile(FileAddress.COOKIE_PATH,cookieToString());
         HttpClient.setClient(cookieClient);
     }
 

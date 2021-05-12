@@ -1,14 +1,11 @@
-import backend.BiliApi;
+import backend.LiveApi;
 import backend.LoginApi;
-import dto.RoomInfo;
 import frontend.*;
 import frontend.JButton;
 import frontend.JFrame;
 import frontend.JPanel;
 import frontend.JTextField;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,10 +37,10 @@ public class App {
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
             LoginApi.login();
-            BiliApi.startStreamIfNot();
+            LiveApi.startStreamIfNot();
 
             mainFrame();
-            BiliApi.buildWebsocket();
+            LiveApi.buildWebsocket();
         });
     }
 
@@ -177,7 +174,7 @@ public class App {
                 return;
             }
 
-            BiliApi.sendMessage(input.trim());
+            LiveApi.sendMessage(input.trim());
 
             hasInput.set(false);
             //textField will lose focus first, so we need to set it manually

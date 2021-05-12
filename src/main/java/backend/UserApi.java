@@ -2,6 +2,7 @@ package backend;
 
 import backend.util.HttpClient;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import dto.RoomInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -64,7 +65,7 @@ public class UserApi {
 
     @Data
     private class GetLiveInfoRespData {
-        @
+        @SerializedName("room_id")
         private Long roomId;
     }
 

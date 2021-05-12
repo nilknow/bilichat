@@ -12,8 +12,6 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.nio.ByteBuffer;
@@ -87,11 +85,11 @@ public class DmWebSocketListener extends WebSocketListener {
     @Override
     public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
         //init json
-        String key = BiliApi.webSocketFirstMessageToken;
+        String key = LiveApi.webSocketFirstMessageToken;
         if (key == null) {
             log.error("cannot build web socket connection");
         }
-        InitJson initJson = new InitJson(BiliApi.uid, Integer.parseInt(BiliApi.roomId), key);
+        InitJson initJson = new InitJson(LiveApi.uid, Integer.parseInt(LiveApi.roomId), key);
         String json = new GsonBuilder().disableHtmlEscaping().create().toJson(initJson);
         byte[] jsonBytes = json.getBytes(StandardCharsets.US_ASCII);
         int totalLength = jsonBytes.length + 16;
