@@ -227,6 +227,16 @@ public class BiliApi {
         }
     }
 
+    public static void openStreamIfNot() {
+        RoomInfo roomInfo = BiliApi.roomInfo(BiliApi.roomId);
+        if (roomInfo != null&&roomInfo.getLiveStatus()!=null&&roomInfo.getLiveStatus()==0) {
+            boolean isStreamStart = BiliApi.startStream();
+            if (!isStreamStart) {
+                logger.error("stream can't start");
+            }
+        }
+    }
+
     private class DanmuInfo{
         private DanmuInfoData data;
 

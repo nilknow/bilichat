@@ -51,14 +51,7 @@ public class App {
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
             BiliApi.login();
-
-            RoomInfo roomInfo = BiliApi.roomInfo(BiliApi.roomId);
-            if (roomInfo != null&&roomInfo.getLiveStatus()!=null&&roomInfo.getLiveStatus()==0) {
-                boolean isStreamStart = BiliApi.startStream();
-                if (!isStreamStart) {
-                    log.error("stream can't start");
-                }
-            }
+            BiliApi.openStreamIfNot();
 
             mainFrame();
             BiliApi.buildWebsocket();
