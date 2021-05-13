@@ -38,9 +38,11 @@ public class LiveApi {
         if (respBody == null) {
             log.error("there are not areas, this shouldn't happen");
             return new ArrayList<>();
+        } else {
+            log.debug(respBody);
         }
 
-        return new Gson().fromJson(respBody, GetWebAreaListResp.class).data
+        return new Gson().fromJson(respBody, GetWebAreaListResp.class).data.data
                 .stream().map(RootArea::getList).flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
@@ -48,6 +50,11 @@ public class LiveApi {
     @EqualsAndHashCode(callSuper = true)
     @Data
     private class GetWebAreaListResp extends StandardResp {
+        private SecondLevelData data;
+    }
+
+    @Data
+    private class SecondLevelData{
         private List<RootArea> data;
     }
 

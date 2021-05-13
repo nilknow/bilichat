@@ -1,8 +1,8 @@
 package tool;
 
 import backend.LiveApi;
-import backend.util.Curl;
 import backend.util.FileUtil;
+import backend.util.HttpClient;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
@@ -41,7 +41,16 @@ public class Live {
         keywords.add("开发");
         keywords.add("编程");
         keywords.add("bug");
-        filterRoomByTitle(keywords);
+        Set<String> banedWords = new HashSet<>();
+        banedWords.add("最美");
+        banedWords.add("女神");
+        banedWords.add("大厂");
+        banedWords.add("小姐姐");
+        banedWords.add("培训");
+        banedWords.add("课");
+        banedWords.add("零基础");
+        banedWords.add("入门");
+        filterRoomByTitle(keywords,banedWords);
     }
 
     /**
@@ -70,8 +79,10 @@ public class Live {
 
         int page = 1;
         while (true) {
-            String jsonStr = Curl.get("https://api.live.bilibili.com/xlive/web-interface/v1/second/getList?platform=web&parent_area_id=11&area_id="
-                    +area.get().getId()+"&sort_type=online&page=" + page);
+            String jsonStr = HttpClient.getRespBody("https://api.live.bilibili.com/xlive/web-interface/v1/second/getList?platform=web&parent_area_id=11&area_id="
+                    + area.get().getId() + "&sort_type=online&page=" + page);
+            log.debug("room in area"+area.get().getName()+" page :"+page);
+            assert jsonStr != null;
             if (jsonStr.length() == 0) {
                 break;
             }
@@ -80,6 +91,7 @@ public class Live {
             if (respJson.getData().getHasMore() != 1) {
                 break;
             }
+            page++;
         }
         log.debug("there are " + page + " pages in area "+areaName);
         log.debug("there are " + result.size() + " rooms in area "+ areaName);
@@ -89,12 +101,12 @@ public class Live {
     /**
      * get all programming related url
      */
-    public static void filterRoomByTitle(Set<String> keyWords){
+    public static void filterRoomByTitle(Set<String> keyWords,Set<String> banedWords){
         File file = new File("roomtitle.txt");
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line;
-            while ((line = br.readLine()) != null) {
+            outer: while ((line = br.readLine()) != null) {
                 boolean containsKeyword = false;
                 for (String keyword : keyWords) {
                     if (line.contains(keyword)) {
@@ -103,6 +115,11 @@ public class Live {
                     }
                 }
                 if (containsKeyword) {
+                    for (String banedWord : banedWords) {
+                        if (line.contains(banedWord)) {
+                            continue outer;
+                        }
+                    }
                     String[] info = line.split("\t");
                     log.info(info[0] + "\t" + "https://live.bilibili.com/" + info[1]);
                 }

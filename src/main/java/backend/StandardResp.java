@@ -9,6 +9,5 @@ import lombok.Data;
 public class StandardResp {
     private Integer code;
     private String message;
-    private Object data;
     private Integer ttl;
 }

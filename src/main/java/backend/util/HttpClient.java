@@ -3,6 +3,7 @@ package backend.util;
 import backend.FileAddress;
 import backend.LoginApi;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Address;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -30,7 +31,10 @@ public class HttpClient {
         if (client == null) {
             synchronized (clientLock) {
                 if (client == null) {
-                    client = new OkHttpClient.Builder().build();
+//                    Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("localhost",8080));
+                    client = new OkHttpClient.Builder()
+//                            .proxy(proxy)
+                            .build();
                 }
             }
         }
@@ -39,8 +43,10 @@ public class HttpClient {
 
     public static Response get(String url){
         Request request = new Request.Builder()
-                .url(url).get().build();
-        try (Response resp = client.newCall(request).execute()) {
+                .url(url)
+                .get()
+                .build();
+        try (Response resp = getClient().newCall(request).execute()) {
             return resp;
         } catch (IOException e) {
             return null;
@@ -48,15 +54,13 @@ public class HttpClient {
     }
 
     public static String getRespBody(String url){
-        Response resp = get(url);
-        if (resp == null) {
-            return null;
-        }
-
-        try {
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        try (Response resp = getClient().newCall(request).execute()) {
             return Objects.requireNonNull(resp.body()).string();
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         }
     }
