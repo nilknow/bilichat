@@ -1,22 +1,11 @@
-import backend.BiliApi;
-import backend.tool.HttpClient;
-import dto.RoomInfo;
+import backend.LiveApi;
+import backend.LoginApi;
 import frontend.*;
 import frontend.JButton;
 import frontend.JFrame;
 import frontend.JPanel;
 import frontend.JTextField;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,14 +13,11 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 public class App {
-    private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final App app = new App();
     private static final JFrame f = new JFrame();
 
@@ -50,11 +36,11 @@ public class App {
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
-            BiliApi.login();
-            BiliApi.openStreamIfNot();
+            LoginApi.login();
+            LiveApi.startStreamIfNot();
 
             mainFrame();
-            BiliApi.buildWebsocket();
+            LiveApi.buildWebsocket();
         });
     }
 
@@ -188,7 +174,7 @@ public class App {
                 return;
             }
 
-            BiliApi.sendMessage(input.trim());
+            LiveApi.sendMessage(input.trim());
 
             hasInput.set(false);
             //textField will lose focus first, so we need to set it manually

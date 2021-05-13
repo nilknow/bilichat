@@ -1,18 +1,17 @@
 package backend;
 
 import dto.Danmu;
-import backend.tool.Zlib;
+import backend.util.Zlib;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import frontend.AppContext;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.nio.ByteBuffer;
@@ -21,54 +20,54 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
+@Slf4j
 public class DmWebSocketListener extends WebSocketListener {
-    private static final Logger logger = LoggerFactory.getLogger(DmWebSocketListener.class);
 
     @Override
     public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-        logger.info("socket connection close");
+        log.info("socket connection close");
         super.onClosed(webSocket, code, reason);
     }
 
     @Override
     public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-        logger.info("serve ready to close");
+        log.info("serve ready to close");
         super.onClosing(webSocket, code, reason);
     }
 
     @Override
     public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-        logger.error("websocket failed");
+        log.error("websocket failed");
         t.printStackTrace();
         System.exit(-1);
     }
 
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-        logger.info("onmessage str");
+        log.info("onmessage str");
     }
 
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
-        logger.info("onMessage");
+        log.info("onMessage");
         byte[] byteArray = bytes.toByteArray();
         if (isPingPong(byteArray)) {
-            logger.info("get pong");
+            log.info("get pong");
             byte[] messageBytes = new byte[byteArray.length - 16];
             System.arraycopy(byteArray, 16, messageBytes, 0, byteArray.length - 16);
             try {
                 Pong pong = new Gson().fromJson(new String(messageBytes), Pong.class);
-                logger.info("popular index value is: " + pong.code);
+                log.info("popular index value is: " + pong.code);
             } catch (Exception e) {
-                logger.error("can't parse as Pong json");
-                logger.error(new String(messageBytes));
+                log.error("can't parse as Pong json");
+                log.error(new String(messageBytes));
             }
         } else if (isZipMsg(byteArray)) {
             byte[] zlibMsg = Arrays.copyOfRange(byteArray, 16, byteArray.length);
             String msg = Zlib.inflate(zlibMsg);
             String jsonStr = msg.substring(msg.indexOf("{"));
             Danmu danmu = new Gson().fromJson(jsonStr, Danmu.class);
-            logger.info(jsonStr);
+            log.info(jsonStr);
             if (!"DANMU_MSG".equals(danmu.getCmd())) {
                 return;
             }
@@ -86,11 +85,11 @@ public class DmWebSocketListener extends WebSocketListener {
     @Override
     public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
         //init json
-        String key = BiliApi.webSocketFirstMessageToken;
+        String key = LiveApi.webSocketFirstMessageToken;
         if (key == null) {
-            logger.error("cannot build web socket connection");
+            log.error("cannot build web socket connection");
         }
-        InitJson initJson = new InitJson(BiliApi.uid, Integer.parseInt(BiliApi.roomId), key);
+        InitJson initJson = new InitJson(LiveApi.uid, Integer.parseInt(LiveApi.roomId), key);
         String json = new GsonBuilder().disableHtmlEscaping().create().toJson(initJson);
         byte[] jsonBytes = json.getBytes(StandardCharsets.US_ASCII);
         int totalLength = jsonBytes.length + 16;
@@ -118,9 +117,9 @@ public class DmWebSocketListener extends WebSocketListener {
         firstFrame[15] = 1;
         //set content
         System.arraycopy(jsonBytes, 0, firstFrame, 16, jsonBytes.length);
-        logger.info("send");
+        log.info("send");
         webSocket.send(new ByteString(firstFrame));
-        logger.info("websocket onopen");
+        log.info("websocket onopen");
 
         //heartbeat
         byte[] heartbeat = new byte[31];
@@ -146,7 +145,7 @@ public class DmWebSocketListener extends WebSocketListener {
             @Override
             public void run() {
                 webSocket.send(new ByteString(heartbeat));
-                logger.info("send ping");
+                log.info("send ping");
             }
         }, 0L, 30 * 1000L);
     }
