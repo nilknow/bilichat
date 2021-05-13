@@ -34,7 +34,7 @@ public class LiveApi {
      */
     @MightEmpty
     public static List<Area> getWebAreaList() {
-        String respBody = HttpClient.getRespBodyWithCookie(getWebAreaListUrl);
+        String respBody = HttpClient.getRespBody(getWebAreaListUrl);
         if (respBody == null) {
             log.error("there are not areas, this shouldn't happen");
             return new ArrayList<>();

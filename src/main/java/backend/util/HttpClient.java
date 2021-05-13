@@ -9,8 +9,7 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Objects;
@@ -24,6 +23,8 @@ public class HttpClient {
     private static final Object clientLock = new Object();
     //if client was set (especially the cookie)
     private static boolean set = false;
+
+    private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36";
 
     public static OkHttpClient getClient() {
         if (client == null) {
@@ -39,7 +40,7 @@ public class HttpClient {
     public static Response get(String url){
         Request request = new Request.Builder()
                 .url(url).get().build();
-        try (Response resp = getClient().newCall(request).execute()) {
+        try (Response resp = client.newCall(request).execute()) {
             return resp;
         } catch (IOException e) {
             return null;
@@ -64,7 +65,25 @@ public class HttpClient {
         if (!set) {
             File file = new File(FileAddress.COOKIE_PATH);
             if (file.exists() && !file.isDirectory()) {
-                file.
+                try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file));){
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = bufferedReader.readLine())!=null) {
+                        sb.append(line);
+                    }
+                    OkHttpClient cookieClient = new OkHttpClient.Builder()
+                            .addInterceptor(chain -> {
+                                Request original = chain.request();
+                                Request cookieRequest = original.newBuilder()
+                                        .addHeader("Cookie", sb.toString())
+                                        .addHeader("user-agent", USER_AGENT)
+                                        .build();
+                                return chain.proceed(cookieRequest);
+                            }).build();
+                    setClient(cookieClient);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } else {
                 LoginApi.login();
             }
