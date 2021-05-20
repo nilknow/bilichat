@@ -34,14 +34,23 @@ public class App {
     private static final Color TEXT_AREA_FOREGROUND_COLOR_DEFAULT = Color.WHITE;
 
 
-    public static void main(String[] args) throws InterruptedException, InvocationTargetException {
-        SwingUtilities.invokeAndWait(() -> {
-            LoginApi.login();
-            LiveApi.startStreamIfNot();
+    public static void main(String[] args) {
+        run();
+    }
 
-            mainFrame();
-            LiveApi.buildWebsocket();
-        });
+    public static void run()  {
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                LoginApi.login();
+                LiveApi.startStreamIfNot();
+
+                mainFrame();
+                LiveApi.buildWebsocket();
+            });
+        } catch (InterruptedException | InvocationTargetException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     /**

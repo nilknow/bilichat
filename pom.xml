@@ -45,6 +45,11 @@
             <version>1.18.20</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.81</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -56,7 +61,7 @@
                     <archive>
                         <manifest>
                             <mainClass>
-                                App
+                                CommandLineApp
                             </mainClass>
                         </manifest>
                     </archive>
