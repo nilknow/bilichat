@@ -12,7 +12,7 @@ b站直播弹幕显式。用java实现是因为“又不是不能用”。
 * [github 哔哩哔哩-API收集整理](https://github.com/SocialSisterYi/bilibili-API-collect)
 
 ## todo list
-1. 使用websocket获取弹幕聊天内容
+1. change content color to red when received a new message, then turn to white gradually.
 
 ## questions
 1. lock when using singleton 
