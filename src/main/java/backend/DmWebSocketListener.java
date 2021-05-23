@@ -66,6 +66,7 @@ public class DmWebSocketListener extends WebSocketListener {
         } else if (isZipMsg(byteArray)) {
             byte[] zlibMsg = Arrays.copyOfRange(byteArray, 16, byteArray.length);
             String msg = Zlib.inflate(zlibMsg);
+            //fixme there are some data that start with { but can't be treat as json, fix it next time
             String jsonStr = msg.substring(msg.indexOf("{"));
             Danmu danmu = new Gson().fromJson(jsonStr, Danmu.class);
             log.info(jsonStr);
