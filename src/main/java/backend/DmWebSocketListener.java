@@ -75,6 +75,8 @@ public class DmWebSocketListener extends WebSocketListener {
             }catch(JsonSyntaxException e){
                 //this might caused by split big json
                 log.error(jsonStr);
+                JFrame mainFrame = AppContext.instance().get("mainFrame", JFrame.class);
+                mainFrame.flash();
                 return;
             }
             log.info(jsonStr);
@@ -88,12 +90,14 @@ public class DmWebSocketListener extends WebSocketListener {
 
             AppContext context = AppContext.instance();
             JTextArea textArea = context.get("textArea", JTextArea.class);
+            JScrollBar scrollBar = context.get("scrollBar", JScrollBar.class);
             //only flash when no message in 15 seconds
             if (textArea.getForeground().equals(Color.WHITE)) {
                 JFrame mainFrame = AppContext.instance().get("mainFrame", JFrame.class);
                 mainFrame.flash();
             }
             textArea.append(danmuStr);
+            scrollBar.setValue(scrollBar.getMaximum());
             textArea.setForeground(Color.RED);
         }
     }
@@ -170,7 +174,7 @@ public class DmWebSocketListener extends WebSocketListener {
                 AppContext context = AppContext.instance();
                 JTextArea textArea = context.get("textArea", JTextArea.class);
                 Color foreground = textArea.getForeground();
-                int timeInSeconds = 15;
+                int timeInSeconds = 20;
                 if (!foreground.equals(Color.WHITE)) {
                     int red = foreground.getRed();
                     int green = foreground.getGreen();
