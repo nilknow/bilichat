@@ -1,10 +1,12 @@
 package backend;
 
+import com.google.gson.JsonSyntaxException;
 import dto.Danmu;
 import backend.util.Zlib;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import frontend.AppContext;
+import frontend.JFrame;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -66,9 +68,15 @@ public class DmWebSocketListener extends WebSocketListener {
         } else if (isZipMsg(byteArray)) {
             byte[] zlibMsg = Arrays.copyOfRange(byteArray, 16, byteArray.length);
             String msg = Zlib.inflate(zlibMsg);
-            //fixme there are some data that start with { but can't be treat as json, fix it next time
             String jsonStr = msg.substring(msg.indexOf("{"));
-            Danmu danmu = new Gson().fromJson(jsonStr, Danmu.class);
+            Danmu danmu;
+            try{
+                 danmu= new Gson().fromJson(jsonStr, Danmu.class);
+            }catch(JsonSyntaxException e){
+                //this might caused by split big json
+                log.error(jsonStr);
+                return;
+            }
             log.info(jsonStr);
             if (!"DANMU_MSG".equals(danmu.getCmd())) {
                 return;
@@ -80,6 +88,11 @@ public class DmWebSocketListener extends WebSocketListener {
 
             AppContext context = AppContext.instance();
             JTextArea textArea = context.get("textArea", JTextArea.class);
+            //only flash when no message in 15 seconds
+            if (textArea.getForeground().equals(Color.WHITE)) {
+                JFrame mainFrame = AppContext.instance().get("mainFrame", JFrame.class);
+                mainFrame.flash();
+            }
             textArea.append(danmuStr);
             textArea.setForeground(Color.RED);
         }

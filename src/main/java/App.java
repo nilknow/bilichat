@@ -57,6 +57,7 @@ public class App {
      * the chat window
      */
     private static void mainFrame() {
+        AppContext.instance().add("mainFrame",f);
         f.setResizable(false);
         f.setAlwaysOnTop( true );
         f.setUndecorated(true);
