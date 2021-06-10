@@ -1,11 +1,5 @@
 package frontend;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
 import java.awt.event.*;
 
 public class JTextField extends javax.swing.JTextField {
