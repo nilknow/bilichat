@@ -1,10 +1,12 @@
 package backend;
 
+import com.google.gson.JsonSyntaxException;
 import dto.Danmu;
 import backend.util.Zlib;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import frontend.AppContext;
+import frontend.JFrame;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -14,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -66,7 +69,16 @@ public class DmWebSocketListener extends WebSocketListener {
             byte[] zlibMsg = Arrays.copyOfRange(byteArray, 16, byteArray.length);
             String msg = Zlib.inflate(zlibMsg);
             String jsonStr = msg.substring(msg.indexOf("{"));
-            Danmu danmu = new Gson().fromJson(jsonStr, Danmu.class);
+            Danmu danmu;
+            try{
+                 danmu= new Gson().fromJson(jsonStr, Danmu.class);
+            }catch(JsonSyntaxException e){
+                //this might caused by split big json
+                log.error(jsonStr);
+                JFrame mainFrame = AppContext.instance().get("mainFrame", JFrame.class);
+                mainFrame.flash();
+                return;
+            }
             log.info(jsonStr);
             if (!"DANMU_MSG".equals(danmu.getCmd())) {
                 return;
@@ -74,11 +86,19 @@ public class DmWebSocketListener extends WebSocketListener {
 
             String danmuStr = danmu.getInfoDetail(1, String.class);
             String user = danmu.getUserName(String.class);
-            danmuStr = user+ " > " + danmuStr + "\n";
+            danmuStr = user + " > " + danmuStr + "\n";
 
             AppContext context = AppContext.instance();
             JTextArea textArea = context.get("textArea", JTextArea.class);
+            JScrollBar scrollBar = context.get("scrollBar", JScrollBar.class);
+            //only flash when no message in 15 seconds
+            if (textArea.getForeground().equals(Color.WHITE)) {
+                JFrame mainFrame = AppContext.instance().get("mainFrame", JFrame.class);
+                mainFrame.flash();
+            }
             textArea.append(danmuStr);
+            scrollBar.setValue(scrollBar.getMaximum());
+            textArea.setForeground(Color.RED);
         }
     }
 
@@ -148,6 +168,28 @@ public class DmWebSocketListener extends WebSocketListener {
                 log.info("send ping");
             }
         }, 0L, 30 * 1000L);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                AppContext context = AppContext.instance();
+                JTextArea textArea = context.get("textArea", JTextArea.class);
+                Color foreground = textArea.getForeground();
+                int timeInSeconds = 20;
+                if (!foreground.equals(Color.WHITE)) {
+                    int red = foreground.getRed();
+                    int green = foreground.getGreen();
+                    int blue = foreground.getBlue();
+                    textArea.setForeground(new Color(red,
+                            Math.min(green + 255 / timeInSeconds, 255),
+                            Math.min(blue + 255 / timeInSeconds, 255)));
+                    log.info(textArea.getForeground().getRed()
+                            + " " + textArea.getForeground().getGreen()
+                            + " " + textArea.getForeground().getBlue());
+                } else {
+                    log.info("no message in " + timeInSeconds + " seconds");
+                }
+            }
+        }, 0L, 1000L);
     }
 
     /**

@@ -57,6 +57,7 @@ public class App {
      * the chat window
      */
     private static void mainFrame() {
+        AppContext.instance().add("mainFrame",f);
         f.setResizable(false);
         f.setAlwaysOnTop( true );
         f.setUndecorated(true);
@@ -85,6 +86,7 @@ public class App {
         textArea_messagePanel.setBackground(TEXT_AREA_BACKGROUND_COLOR_DEFAULT);
         textArea_messagePanel.setForeground(TEXT_AREA_FOREGROUND_COLOR_DEFAULT);
         JScrollPane jsp = new JScrollPane(textArea_messagePanel);
+        AppContext.instance().add("scrollBar",jsp.getVerticalScrollBar());
         jsp.setPreferredSize(panel.getPreferredSize());
 
         panel.add(jsp);
