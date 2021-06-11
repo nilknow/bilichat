@@ -182,11 +182,11 @@ public class DmWebSocketListener extends WebSocketListener {
                     textArea.setForeground(new Color(red,
                             Math.min(green + 255 / timeInSeconds, 255),
                             Math.min(blue + 255 / timeInSeconds, 255)));
-                    log.info(textArea.getForeground().getRed()
+                    log.debug(textArea.getForeground().getRed()
                             + " " + textArea.getForeground().getGreen()
                             + " " + textArea.getForeground().getBlue());
                 } else {
-                    log.info("no message in " + timeInSeconds + " seconds");
+                    log.debug("no message in " + timeInSeconds + " seconds");
                 }
             }
         }, 0L, 1000L);
